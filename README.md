@@ -125,6 +125,60 @@ We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 
 2. [Mediapipe Face Detection](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android) to crop faces from the image
 3. [ObjectBox](https://objectbox.io) for on-device vector-store and NoSQL database
 
+## Source of TFLite models
+
+### `facenet.tflite` and `facenet_512.tflite`
+
+The `facenet` TFLite models are sourced from the popular [`deepface`](https://github.com/serengil/deepface) library,
+
+```python
+from deepface import DeepFace
+from deepface.models.facial_recognition.Facenet import scaling
+import tensorflow as tf
+
+model = DeepFace.build_model("Facenet")
+model.model.save("facenet.keras")
+
+model = tf.keras.models.load_model("facenet.keras", custom_objects={
+    "scaling": scaling
+})
+converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
+converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_fp16.target_spec.supported_types = [tf.float16]
+tflite_model_fp16 = converter_fp16.convert()
+
+with open("facenet.tflite", "wb") as file:
+    file.write(tflite_model_fp16)
+```
+
+```python
+from deepface import DeepFace
+from deepface.models.facial_recognition.Facenet import scaling
+import tensorflow as tf
+
+model = DeepFace.build_model("Facenet512")
+model.model.save("facenet512.keras")
+
+model = tf.keras.models.load_model("facenet512.keras", custom_objects={
+    "scaling": scaling
+})
+converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
+converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_fp16.target_spec.supported_types = [tf.float16]
+tflite_model_fp16 = converter_fp16.convert()
+
+with open("facenet_512.tflite", "wb") as file:
+    file.write(tflite_model_fp16)
+```
+
+### `spoof_model_scale` TFLite models
+
+[PyTorch model weights](https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNetBackbone.py) were converted to TFLite via ONNX.
+
+### `blaze_face_short_range` TFLite model
+
+Check the [Mediapipe FaceDetector docs](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector#blazeface_short-range) for more information on the model.
+
 ## Discussion
 
 ### Implementing face-liveness detection
