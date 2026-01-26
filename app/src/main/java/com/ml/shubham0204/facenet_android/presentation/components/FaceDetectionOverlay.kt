@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
+import androidx.core.graphics.createBitmap
 
 @SuppressLint("ViewConstructor")
 @ExperimentalGetImage
@@ -51,14 +52,13 @@ class FaceDetectionOverlay(
 
     private lateinit var frameBitmap: Bitmap
     private var isProcessing = false
-    private var cameraFacing: Int = CameraSelector.LENS_FACING_BACK
+    private var cameraFacing: Int? = null
     private lateinit var boundingBoxOverlay: BoundingBoxOverlay
     private lateinit var previewView: PreviewView
 
     var predictions: Array<Prediction> = arrayOf()
 
     init {
-        initializeCamera(cameraFacing)
         doOnLayout {
             overlayHeight = it.measuredHeight
             overlayWidth = it.measuredWidth
@@ -124,11 +124,7 @@ class FaceDetectionOverlay(
 
             // Transform android.net.Image to Bitmap
             frameBitmap =
-                Bitmap.createBitmap(
-                    image.image!!.width,
-                    image.image!!.height,
-                    Bitmap.Config.ARGB_8888,
-                )
+                createBitmap(image.image!!.width, image.image!!.height)
             frameBitmap.copyPixelsFromBuffer(image.planes[0].buffer)
 
             // Configure frameHeight and frameWidth for output2overlay transformation matrix

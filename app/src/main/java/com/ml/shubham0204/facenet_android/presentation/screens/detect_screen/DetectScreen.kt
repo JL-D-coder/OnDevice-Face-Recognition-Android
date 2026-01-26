@@ -59,6 +59,7 @@ private lateinit var cameraPermissionLauncher: ManagedActivityResultLauncher<Str
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
+    val viewModel: DetectScreenViewModel = koinViewModel()
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -80,11 +81,7 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
                         }
                         IconButton(
                             onClick = {
-                                if (cameraFacing.intValue == CameraSelector.LENS_FACING_BACK) {
-                                    cameraFacing.intValue = CameraSelector.LENS_FACING_FRONT
-                                } else {
-                                    cameraFacing.intValue = CameraSelector.LENS_FACING_BACK
-                                }
+                                viewModel.changeCameraFacing()
                             },
                         ) {
                             Icon(
@@ -96,14 +93,13 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
                 )
             },
         ) { innerPadding ->
-            Column(modifier = Modifier.padding(innerPadding)) { ScreenUI() }
+            Column(modifier = Modifier.padding(innerPadding)) { ScreenUI(viewModel) }
         }
     }
 }
 
 @Composable
-private fun ScreenUI() {
-    val viewModel: DetectScreenViewModel = koinViewModel()
+private fun ScreenUI(viewModel: DetectScreenViewModel) {
     Box {
         Camera(viewModel)
         DelayedVisibility(viewModel.getNumPeople() > 0) {
@@ -157,7 +153,7 @@ private fun Camera(viewModel: DetectScreenViewModel) {
     cameraPermissionStatus.value =
         ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
         PackageManager.PERMISSION_GRANTED
-    val cameraFacing by remember { cameraFacing }
+    val cameraFacing by remember { viewModel.cameraFacing }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     cameraPermissionLauncher =
